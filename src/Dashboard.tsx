@@ -14,6 +14,7 @@ const Dashboard: React.FC = () => {
   const [errors, setErrors] = useState<ErrorDetail[]>([]);
   const [batchId, setBatchId] = useState<string>("");
   const [timestamp, setTimestamp] = useState<string>("");
+  const [validationResults, setValidationResults] = useState<{ [key: string]: boolean }>({});
 
   const handleApiCall = async (
     apiCall: () => Promise<Response>,
@@ -25,15 +26,23 @@ const Dashboard: React.FC = () => {
 
       if (response.ok) {
         if (action === "upload") {
-          setPayments((data as UploadResponse).results.data); // fallback to 'as' syntax for this line
+          setPayments((data as UploadResponse).results.data);
           setBatchId((data as UploadResponse).results.batchId);
           setTimestamp((data as UploadResponse).results.completedTimestamp);
           setErrors([]);
+          setValidationResults({});
         } else {
           setPayments((data as ValidationResponse | SubmitResponse).request.data);
           setBatchId((data as ValidationResponse | SubmitResponse).results.batchId);
           setTimestamp((data as ValidationResponse | SubmitResponse).results.completedTimestamp);
           setErrors((data as ValidationResponse | SubmitResponse).results.errors || []);
+          // Extract validation results
+          const validationArr = (data as ValidationResponse | SubmitResponse).results.validation || [];
+          const validationMap: { [key: string]: boolean } = {};
+          validationArr.forEach((v: { key: string; isValid: boolean }) => {
+            validationMap[v.key] = v.isValid;
+          });
+          setValidationResults(validationMap);
         }
       } else {
         setErrors(
@@ -52,10 +61,18 @@ const Dashboard: React.FC = () => {
           setPayments((data as ValidationResponse | SubmitResponse).request.data);
           setBatchId((data as ValidationResponse | SubmitResponse).results.batchId);
           setTimestamp((data as ValidationResponse | SubmitResponse).results.completedTimestamp);
+          // Extract validation results (even on error)
+          const validationArr = (data as ValidationResponse | SubmitResponse).results.validation || [];
+          const validationMap: { [key: string]: boolean } = {};
+          validationArr.forEach((v: { key: string; isValid: boolean }) => {
+            validationMap[v.key] = v.isValid;
+          });
+          setValidationResults(validationMap);
         } else {
           setPayments([]);
           setBatchId("");
           setTimestamp("");
+          setValidationResults({});
         }
       }
     } catch (error) {
@@ -67,6 +84,7 @@ const Dashboard: React.FC = () => {
           code: "NETWORK_ERROR",
         },
       ]);
+      setValidationResults({});
     }
   };
 
@@ -75,42 +93,17 @@ const Dashboard: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4">Payment API Dashboard</h1>
 
       {/* Buttons Section */}
-      <div className="flex gap-4 mb-4">
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => handleApiCall(mockUploadSuccess, "upload")}
-        >
-          Upload Success
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => handleApiCall(mockUploadFailure, "upload")}
-        >
-          Upload Failure
-        </button>
-        <button
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => handleApiCall(mockValidateSuccess, "validate")}
-        >
-          Validate Success
-        </button>
-        <button
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => handleApiCall(mockValidateFailure, "validate")}
-        >
-          Validate Failure
-        </button>
-        <button
-          className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => handleApiCall(mockSubmitSuccess, "submit")}
-        >
-          Submit Success
-        </button>
+      <div className="button-group">
+        <button className="btn" onClick={() => handleApiCall(mockUploadSuccess, "upload")}>Upload Success</button>
+        <button className="btn" onClick={() => handleApiCall(mockUploadFailure, "upload")}>Upload Failure</button>
+        <button className="btn btn-success" onClick={() => handleApiCall(mockValidateSuccess, "validate")}>Validate Success</button>
+        <button className="btn btn-error" onClick={() => handleApiCall(mockValidateFailure, "validate")}>Validate Failure</button>
+        <button className="btn btn-submit" onClick={() => handleApiCall(mockSubmitSuccess, "submit")}>Submit Success</button>
       </div>
 
       {/* Batch Info */}
       {batchId && (
-        <div className="mb-4">
+        <div className="batch-info">
           <p>
             <strong>Batch ID:</strong> {batchId}
           </p>
@@ -122,9 +115,9 @@ const Dashboard: React.FC = () => {
 
       {/* Errors Section */}
       {errors.length > 0 && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          <h2 className="text-lg font-semibold">Errors</h2>
-          <ul className="list-disc pl-5">
+        <div className="error-box">
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>Errors</h2>
+          <ul style={{ paddingLeft: '1.2em', margin: 0 }}>
             {errors.map((error, index) => (
               <li key={index}>
                 {error.key ? `Check ${error.key}: ` : ""}
@@ -137,35 +130,42 @@ const Dashboard: React.FC = () => {
 
       {/* Payments Grid */}
       {payments.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border">
+        <div style={{ overflowX: 'auto' }}>
+          <table>
             <thead>
               <tr>
-                <th className="py-2 px-4 border">Check Number</th>
-                <th className="py-2 px-4 border">Amount</th>
-                <th className="py-2 px-4 border">Clear Date</th>
-                <th className="py-2 px-4 border">Issue Date</th>
-                <th className="py-2 px-4 border">Status</th>
-                <th className="py-2 px-4 border">Vendor ID</th>
+                <th>Check Number</th>
+                <th>Amount</th>
+                <th>Clear Date</th>
+                <th>Issue Date</th>
+                <th>Status</th>
+                <th>Vendor ID</th>
+                <th>Validation Status</th>
               </tr>
             </thead>
             <tbody>
-              {payments.map((payment) => (
-                <tr key={payment.checkNumber}>
-                  <td className="py-2 px-4 border">{payment.checkNumber}</td>
-                  <td className="py-2 px-4 border">
-                    ${payment.checkAmount.toFixed(2)}
-                  </td>
-                  <td className="py-2 px-4 border">
-                    {new Date(payment.clearDate).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 px-4 border">
-                    {new Date(payment.issueDate).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 px-4 border">{payment.checkStatus}</td>
-                  <td className="py-2 px-4 border">{payment.vendorId}</td>
-                </tr>
-              ))}
+              {payments.map((payment) => {
+                const validation = validationResults[payment.checkNumber.toString()];
+                return (
+                  <tr key={payment.checkNumber}>
+                    <td>{payment.checkNumber}</td>
+                    <td>${payment.checkAmount.toFixed(2)}</td>
+                    <td>{new Date(payment.clearDate).toLocaleDateString()}</td>
+                    <td>{new Date(payment.issueDate).toLocaleDateString()}</td>
+                    <td>{payment.checkStatus}</td>
+                    <td>{payment.vendorId}</td>
+                    <td>
+                      {validation === undefined ? (
+                        <span className="badge badge-na">N/A</span>
+                      ) : validation ? (
+                        <span className="badge badge-success">Success</span>
+                      ) : (
+                        <span className="badge badge-error">Error</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

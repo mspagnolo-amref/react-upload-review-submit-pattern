@@ -2,3 +2,118 @@
   font-family: sans-serif;
   text-align: center;
 }
+
+/* Dashboard container */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #f8fafc;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+h1 {
+  color: #22223b;
+  margin-bottom: 1.5rem;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.btn {
+  background: #3a86ff;
+  color: #fff;
+  font-weight: bold;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(58,134,255,0.08);
+}
+.btn:hover {
+  background: #265d97;
+}
+.btn-success {
+  background: #43aa8b;
+}
+.btn-success:hover {
+  background: #2d6a4f;
+}
+.btn-error {
+  background: #f3722c;
+}
+.btn-error:hover {
+  background: #b3541a;
+}
+.btn-submit {
+  background: #7209b7;
+}
+.btn-submit:hover {
+  background: #4b0863;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+th, td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+}
+th {
+  background: #edf2fb;
+  color: #22223b;
+  font-weight: 600;
+}
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.8em;
+  border-radius: 12px;
+  font-size: 0.95em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.badge-success {
+  background: #d8f3dc;
+  color: #1b4332;
+}
+.badge-error {
+  background: #ffe5e5;
+  color: #b00020;
+}
+.badge-na {
+  background: #e9ecef;
+  color: #6c757d;
+}
+
+/* Error box */
+.error-box {
+  background: #ffe5e5;
+  border: 1px solid #ffb3b3;
+  color: #b00020;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Batch info */
+.batch-info {
+  margin-bottom: 1.5rem;
+  color: #495057;
+}

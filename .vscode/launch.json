@@ -1,0 +1,22 @@
+{
+"version": "0.2.0",
+"configurations": [
+{
+"name": "Launch Chrome against localhost",
+"type": "chrome",
+"request": "launch",
+"url": "http://localhost:4200/*",
+"webRoot": "${workspaceFolder}",
+"trace": true,
+"timeout": 30000,
+"runtimeExecutable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+},
+{
+"name": "Attach to Chrome",
+"type": "chrome",
+"request": "attach",
+"port": 9222,
+"webRoot": "${workspaceFolder}"
+}
+]
+}

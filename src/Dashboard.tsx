@@ -3,9 +3,11 @@ import { Payment, ErrorDetail, UploadResponse, ValidationResponse, SubmitRespons
 import {
   mockUploadSuccess,
   mockUploadFailure,
-  mockValidateSuccess,
-  mockValidateFailure,
-  mockSubmitSuccess,
+  // mockValidateSuccess,
+  // mockValidateFailure,
+  // mockSubmitSuccess,
+  validationMock,
+  submitMock
 } from "./mocks";
 
 // React Component
@@ -14,7 +16,7 @@ const Dashboard: React.FC = () => {
   const [errors, setErrors] = useState<ErrorDetail[]>([]);
   const [batchId, setBatchId] = useState<string>("");
   const [timestamp, setTimestamp] = useState<string>("");
-  const [validationResults, setValidationResults] = useState<{ [key: string]: boolean }>({});
+  const [validationResults, setValidationResults] = useState<{ [key: string]: boolean | undefined }>({});
 
   const handleApiCall = async (
     apiCall: () => Promise<Response>,
@@ -29,6 +31,12 @@ const Dashboard: React.FC = () => {
           setPayments((data as UploadResponse).results.data);
           setBatchId((data as UploadResponse).results.batchId);
           setTimestamp((data as UploadResponse).results.completedTimestamp);
+          setErrors([]);
+          setValidationResults({});
+        } else if (action === "submit"&&response.ok) {
+          setPayments([]);
+          setBatchId("");
+          setTimestamp("");
           setErrors([]);
           setValidationResults({});
         } else {
@@ -88,6 +96,30 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Add a handler for editing payment fields
+  const handlePaymentChange = (
+    index: number,
+    field: keyof Payment,
+    value: string | number
+  ) => {
+    setPayments((prevPayments) => {
+      const updatedPayments = [...prevPayments];
+      updatedPayments[index] = {
+        ...updatedPayments[index],
+        [field]: value,
+      };
+      return updatedPayments;
+    });
+    // Set validation for this row to undefined (N/A)
+    setValidationResults((prev) => {
+      const updated = { ...prev };
+      const key = payments[index].checkNumber.toString();
+      updated[key] = undefined;
+      return updated;
+    });
+  };
+
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Payment API Dashboard</h1>
@@ -96,9 +128,11 @@ const Dashboard: React.FC = () => {
       <div className="button-group">
         <button className="btn" onClick={() => handleApiCall(mockUploadSuccess, "upload")}>Upload Success</button>
         <button className="btn" onClick={() => handleApiCall(mockUploadFailure, "upload")}>Upload Failure</button>
-        <button className="btn btn-success" onClick={() => handleApiCall(mockValidateSuccess, "validate")}>Validate Success</button>
+        {/* <button className="btn btn-success" onClick={() => handleApiCall(mockValidateSuccess, "validate")}>Validate Success</button>
         <button className="btn btn-error" onClick={() => handleApiCall(mockValidateFailure, "validate")}>Validate Failure</button>
-        <button className="btn btn-submit" onClick={() => handleApiCall(mockSubmitSuccess, "submit")}>Submit Success</button>
+        <button className="btn btn-submit" onClick={() => handleApiCall(mockSubmitSuccess, "submit")}>Submit Success</button> */}
+        <button className="btn btn-validate" onClick={() => handleApiCall(() => validationMock(payments), "validate")}>Validate (Real)</button>
+        <button className="btn btn-submit" onClick={() => handleApiCall(() => submitMock(payments), "submit")}>Submit (Real)</button>
       </div>
 
       {/* Batch Info */}
@@ -144,16 +178,59 @@ const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {payments.map((payment) => {
+              {payments.map((payment, idx) => {
                 const validation = validationResults[payment.checkNumber.toString()];
                 return (
                   <tr key={payment.checkNumber}>
-                    <td>{payment.checkNumber}</td>
-                    <td>${payment.checkAmount.toFixed(2)}</td>
-                    <td>{new Date(payment.clearDate).toLocaleDateString()}</td>
-                    <td>{new Date(payment.issueDate).toLocaleDateString()}</td>
-                    <td>{payment.checkStatus}</td>
-                    <td>{payment.vendorId}</td>
+                    <td>
+                      <input
+                        type="number"
+                        value={payment.checkNumber}
+                        onChange={e => handlePaymentChange(idx, 'checkNumber', Number(e.target.value))}
+                        style={{ width: '90px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={payment.checkAmount}
+                        onChange={e => handlePaymentChange(idx, 'checkAmount', Number(e.target.value))}
+                        style={{ width: '80px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="date"
+                        value={payment.clearDate ? new Date(payment.clearDate).toISOString().split('T')[0] : ''}
+                        onChange={e => handlePaymentChange(idx, 'clearDate', e.target.value)}
+                        style={{ width: '120px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="date"
+                        value={payment.issueDate ? new Date(payment.issueDate).toISOString().split('T')[0] : ''}
+                        onChange={e => handlePaymentChange(idx, 'issueDate', e.target.value)}
+                        style={{ width: '120px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={payment.checkStatus}
+                        onChange={e => handlePaymentChange(idx, 'checkStatus', e.target.value)}
+                        style={{ width: '90px' }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={payment.vendorId}
+                        onChange={e => handlePaymentChange(idx, 'vendorId', e.target.value)}
+                        style={{ width: '90px' }}
+                      />
+                    </td>
                     <td>
                       {validation === undefined ? (
                         <span className="badge badge-na">N/A</span>

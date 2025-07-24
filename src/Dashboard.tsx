@@ -39,6 +39,7 @@ const Dashboard: React.FC = () => {
           setTimestamp("");
           setErrors([]);
           setValidationResults({});
+          alert("Submit Success");
         } else {
           setPayments((data as ValidationResponse | SubmitResponse).request.data);
           setBatchId((data as ValidationResponse | SubmitResponse).results.batchId);
@@ -96,6 +97,12 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleDeletePayment = (index: number) => {
+    setPayments((prevPayments: Payment[]) => {
+      return prevPayments.filter((_, i) => i !== index);
+    });
+  };
+
   // Add a handler for editing payment fields
   const handlePaymentChange = (
     index: number,
@@ -144,6 +151,12 @@ const Dashboard: React.FC = () => {
           <p>
             <strong>Timestamp:</strong> {new Date(timestamp).toLocaleString()}
           </p>
+          <p>
+            <strong>$Total:</strong> {payments.reduce((acc, payment) => acc + payment.checkAmount, 0).toFixed(2)}
+          </p>
+          <p>
+            <strong>Records:</strong> {payments.length}
+          </p>
         </div>
       )}
 
@@ -168,6 +181,7 @@ const Dashboard: React.FC = () => {
           <table>
             <thead>
               <tr>
+                <th>Actions</th>
                 <th>Check Number</th>
                 <th>Amount</th>
                 <th>Clear Date</th>
@@ -182,6 +196,9 @@ const Dashboard: React.FC = () => {
                 const validation = validationResults[payment.checkNumber.toString()];
                 return (
                   <tr key={payment.checkNumber}>
+                    <td>
+                      <button className="btn btn-delete" onClick={() => handleDeletePayment(idx)}>Delete</button>
+                    </td>
                     <td>
                       <input
                         type="number"
